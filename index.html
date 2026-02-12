@@ -1,292 +1,273 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { 
-  Search, 
-  AlertCircle, 
-  CheckCircle2, 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  Package, 
-  Info,
-  Plus,
-  Camera,
-  X,
-  TrendingDown,
-  TrendingUp,
-  Download,
-  ArrowRight,
-  Eye
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biotech | Tarifa 2026 - Grupo Vista</title>
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React y Babel para ejecutar el código en el navegador -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-900">
+    <div id="root"></div>
 
-const App = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [productImages, setProductImages] = useState({});
+    <script type="text/babel">
+        const { useState, useMemo, useRef, useEffect } = React;
 
-  // Función para simular la carga de imágenes en el dashboard
-  const handleImageUpload = (id, event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProductImages(prev => ({ ...prev, [id]: imageUrl }));
-    }
-  };
+        // Mock de iconos de Lucide (usando strings para renderizado dinámico en HTML simple)
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
 
-  const removeImage = (id) => {
-    setProductImages(prev => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-  };
+        const App = () => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [filterStatus, setFilterStatus] = useState('all');
+            const [productImages, setProductImages] = useState({});
 
-  // Listado oficial de las 31 referencias de la Tarifa 2026
-  const products = [
-    // --- LIO FÁQUICAS (5 refs) ---
-    { id: 1, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic Baja Potencia (SPH & TOR)', desc: 'SPH +0.50D a +2.75D / SPH -0.50D a -6D con CYL hasta +5D.', precioViejo: 625.00, precioNuevo: 500.00, estado: 'Actualizar' },
-    { id: 2, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic Alta Potencia (SPH)', desc: 'SPH +3.00 a +10D / SPH -6.50D a -25D.', precioViejo: 625.00, precioNuevo: 577.00, estado: 'Actualizar' },
-    { id: 3, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic Alta Potencia (TOR) - Cil 0.5/1.0D', desc: 'Excepción: Cilindros de 0.50D y 1.0D facturados como esféricas.', precioViejo: 950.00, precioNuevo: 577.00, estado: 'Actualizar' },
-    { id: 4, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic Alta Potencia (TOR) - Otros Cil', desc: 'SPH +3.00D a +10D / SPH -6.50D a -25D. CYL hasta +5D.', precioViejo: 950.00, precioNuevo: 800.00, estado: 'Actualizar' },
-    { id: 5, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic CUSTOM (SPH & TOR)', desc: 'SPH > -25D / +10D o CIL > +5D. Tallas especiales.', precioViejo: null, precioNuevo: 1250.00, estado: 'Nuevo' },
+            const handleImageUpload = (id, event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const imageUrl = URL.createObjectURL(file);
+                    setProductImages(prev => ({ ...prev, [id]: imageUrl }));
+                }
+            };
 
-    // --- LIO PREMIUM / EDOF (8 refs) ---
-    { id: 6, cat: 'LIO Premium', nombre: 'OPTIFLEX TRIO 3FLA6', desc: 'Trifocal. Visión nítida a múltiples distancias.', precioViejo: null, precioNuevo: 320.00, estado: 'Nuevo' },
-    { id: 7, cat: 'LIO Premium', nombre: 'OPTIFLEX TRIO TORICA', desc: 'Trifocal con corrección de astigmatismo corneal.', precioViejo: null, precioNuevo: 420.00, estado: 'Nuevo' },
-    { id: 8, cat: 'LIO Premium', nombre: 'OPTIFLEX TRIO PLUS (NEW)', desc: 'Nueva generación Trifocal con óptica mejorada.', precioViejo: null, precioNuevo: 420.00, estado: 'Nuevo' },
-    { id: 9, cat: 'LIO Premium', nombre: 'OPTIFLEX XTENSE COMFORT PLUS (NEW)', desc: 'Continuous Vision. Tecnología avanzada sin halos.', precioViejo: null, precioNuevo: 420.00, estado: 'Nuevo' },
-    { id: 10, cat: 'LIO Premium', nombre: 'EYECRYL SERT', desc: 'EDOF. Profundidad de foco extendida.', precioViejo: null, precioNuevo: 105.00, estado: 'Nuevo' },
-    { id: 11, cat: 'LIO Premium', nombre: 'EYECRYL SERT TORIC CIL 1.0D', desc: 'EDOF Tórica para astigmatismos bajos.', precioViejo: null, precioNuevo: 200.00, estado: 'Nuevo' },
-    { id: 12, cat: 'LIO Premium', nombre: 'EYECRYL SERT TORIC OTROS CILINDROS', desc: 'EDOF Tórica para corrección astigmática completa.', precioViejo: null, precioNuevo: 265.00, estado: 'Nuevo' },
-    { id: 13, cat: 'LIO Premium', nombre: 'EYECRYL ACTV', desc: 'Multifocal bifocal hidrofóbica.', precioViejo: 210.00, precioNuevo: 200.00, estado: 'Actualizar' },
+            const removeImage = (id) => {
+                setProductImages(prev => {
+                    const next = { ...prev };
+                    delete next[id];
+                    return next;
+                });
+            };
 
-    // --- LIO MONOFOCALES (2 refs) ---
-    { id: 14, cat: 'LIO Monofocal', nombre: 'OPTIFLEX GENESIS COMFORT NY', desc: 'Precargada con filtro amarillo.', precioViejo: null, precioNuevo: 59.00, estado: 'Nuevo' },
-    { id: 15, cat: 'LIO Monofocal', nombre: 'EYECRYL PLUS NATURAL HD', desc: 'No precargada. Alta definición visual.', precioViejo: null, precioNuevo: 39.00, estado: 'Nuevo' },
+            const products = [
+                { id: 1, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic Baja Potencia (SPH & TOR)', desc: 'SPH +0.50D a +2.75D / SPH -0.50D a -6D con CYL hasta +5D.', precioViejo: 625.00, precioNuevo: 500.00, estado: 'Actualizar' },
+                { id: 2, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic Alta Potencia (SPH)', desc: 'SPH +3.00 a +10D / SPH -6.50D a -25D.', precioViejo: 625.00, precioNuevo: 577.00, estado: 'Actualizar' },
+                { id: 3, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic Alta Potencia (TOR) - Cil 0.5/1.0D', desc: 'Excepción: Cilindros de 0.50D y 1.0D facturados como esféricas.', precioViejo: 950.00, precioNuevo: 577.00, estado: 'Actualizar' },
+                { id: 4, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic Alta Potencia (TOR) - Otros Cil', desc: 'SPH +3.00D a +10D / SPH -6.50D a -25D. CYL hasta +5D.', precioViejo: 950.00, precioNuevo: 800.00, estado: 'Actualizar' },
+                { id: 5, cat: 'LIO Fáquicas', nombre: 'Eyecryl Phakic CUSTOM (SPH & TOR)', desc: 'SPH > -25D / +10D o CIL > +5D. Tallas especiales.', precioViejo: null, precioNuevo: 1250.00, estado: 'Nuevo' },
+                { id: 6, cat: 'LIO Premium', nombre: 'OPTIFLEX TRIO 3FLA6', desc: 'Lente Trifocal. Visión nítida a múltiples distancias.', precioViejo: null, precioNuevo: 320.00, estado: 'Nuevo' },
+                { id: 7, cat: 'LIO Premium', nombre: 'OPTIFLEX TRIO TORICA', desc: 'Trifocal con corrección de astigmatismo corneal.', precioViejo: null, precioNuevo: 420.00, estado: 'Nuevo' },
+                { id: 8, cat: 'LIO Premium', nombre: 'OPTIFLEX TRIO PLUS (NEW)', desc: 'Nueva generación Trifocal con óptica mejorada.', precioViejo: null, precioNuevo: 420.00, estado: 'Nuevo' },
+                { id: 9, cat: 'LIO Premium', nombre: 'OPTIFLEX XTENSE COMFORT PLUS (NEW)', desc: 'Continuous Vision. Tecnología avanzada sin halos.', precioViejo: null, precioNuevo: 420.00, estado: 'Nuevo' },
+                { id: 10, cat: 'LIO Premium', nombre: 'EYECRYL SERT', desc: 'EDOF. Profundidad de foco extendida.', precioViejo: null, precioNuevo: 105.00, estado: 'Nuevo' },
+                { id: 11, cat: 'LIO Premium', nombre: 'EYECRYL SERT TORIC CIL 1.0D', desc: 'EDOF Tórica para astigmatismos bajos.', precioViejo: null, precioNuevo: 200.00, estado: 'Nuevo' },
+                { id: 12, cat: 'LIO Premium', nombre: 'EYECRYL SERT TORIC OTROS CILINDROS', desc: 'EDOF Tórica para corrección astigmática completa.', precioViejo: null, precioNuevo: 265.00, estado: 'Nuevo' },
+                { id: 13, cat: 'LIO Premium', nombre: 'EYECRYL ACTV', desc: 'Multifocal bifocal hidrofóbica.', precioViejo: 210.00, precioNuevo: 200.00, estado: 'Actualizar' },
+                { id: 14, cat: 'LIO Monofocal', nombre: 'OPTIFLEX GENESIS COMFORT NY', desc: 'Precargada con filtro amarillo.', precioViejo: null, precioNuevo: 59.00, estado: 'Nuevo' },
+                { id: 15, cat: 'LIO Monofocal', nombre: 'EYECRYL PLUS NATURAL HD', desc: 'No precargada. Alta definición visual.', precioViejo: null, precioNuevo: 39.00, estado: 'Nuevo' },
+                { id: 16, cat: 'Viscoelásticos', nombre: 'BIO HYALUR 1ML PFS', desc: 'Hialuronato Sódico 1%.', precioViejo: null, precioNuevo: 9.90, estado: 'Nuevo' },
+                { id: 17, cat: 'Viscoelásticos', nombre: 'BIO HYALUR PLUS 1ML PFS', desc: 'Hialuronato Sódico 1.4%.', precioViejo: null, precioNuevo: 10.80, estado: 'Nuevo' },
+                { id: 18, cat: 'Viscoelásticos', nombre: 'BIO HYALUR DUO', desc: 'Hialuronato Sódico 1.0% + 2.4%.', precioViejo: 22.95, precioNuevo: 24.00, estado: 'Actualizar' },
+                { id: 19, cat: 'Viscoelásticos', nombre: 'BIO HYALUR LVD 1ML PFS', desc: '3% Hialuronato + 4% Condroitina.', precioViejo: null, precioNuevo: 24.50, estado: 'Nuevo' },
+                { id: 20, cat: 'Viscoelásticos', nombre: 'BIO HYALUR HV 1ML PFS', desc: 'Hialuronato Sódico 2.4%. Alta viscosidad.', precioViejo: 15.00, precioNuevo: 12.00, estado: 'Actualizar' },
+                { id: 21, cat: 'Viscoelásticos', nombre: 'BIO HYALUR SV 1ML PFS', desc: 'Hialuronato Sódico 3.0%. Super viscoso.', precioViejo: 16.00, precioNuevo: 12.00, estado: 'Actualizar' },
+                { id: 22, cat: 'Viscoelásticos', nombre: 'EYEVISC 2% 2ML PFS', desc: 'Hidroxipropilmetilcelulosa.', precioViejo: 9.00, precioNuevo: 7.70, estado: 'Actualizar' },
+                { id: 23, cat: 'Otros / VR', nombre: 'BIO BLUE 1ML PFS', desc: 'Colorante vital (Tripán Blue).', precioViejo: 72.50, precioNuevo: 9.25, estado: 'Actualizar' },
+                { id: 24, cat: 'Otros / VR', nombre: 'BIOVISION PMMA CTR', desc: 'Anillo de tensión capsular.', precioViejo: 30.00, precioNuevo: 35.00, estado: 'Actualizar' },
+                { id: 25, cat: 'Otros / VR', nombre: 'BIOBLUE 90 PLUS (ERM/ILM)', desc: 'Colorante para membranas retinianas.', precioViejo: null, precioNuevo: 39.00, estado: 'Nuevo' },
+                { id: 26, cat: 'Otros / VR', nombre: 'BIOSIL 10ML', desc: 'Aceite de silicona para VR.', precioViejo: null, precioNuevo: 45.00, estado: 'Nuevo' },
+                { id: 27, cat: 'Otros / VR', nombre: 'BIOSIL F 10ML', desc: 'Aceite de silicona variante F.', precioViejo: null, precioNuevo: 45.00, estado: 'Nuevo' },
+                { id: 28, cat: 'Otros / VR', nombre: 'BIO OCTANE', desc: 'Líquido pesado (Perfluorooctano).', precioViejo: null, precioNuevo: 50.00, estado: 'Nuevo' },
+                { id: 29, cat: 'Otros / VR', nombre: 'BIO DECALIN', desc: 'Líquido pesado (Perfluorodecalina).', precioViejo: null, precioNuevo: 50.00, estado: 'Nuevo' },
+                { id: 30, cat: 'Otros / VR', nombre: 'IRIS RETRACTOR', desc: 'Retractores de iris (5 uds).', precioViejo: 50.00, precioNuevo: 30.00, estado: 'Actualizar' },
+                { id: 31, cat: 'Otros / VR', nombre: 'BIORING', desc: 'Anillo intraestromal.', precioViejo: null, precioNuevo: 275.00, estado: 'Nuevo' },
+            ];
 
-    // --- VISCOELÁSTICOS (7 refs) ---
-    { id: 16, cat: 'Viscoelásticos', nombre: 'BIO HYALUR 1ML PFS', desc: 'Hialuronato Sódico 1%.', precioViejo: null, precioNuevo: 9.90, estado: 'Nuevo' },
-    { id: 17, cat: 'Viscoelásticos', nombre: 'BIO HYALUR PLUS 1ML PFS', desc: 'Hialuronato Sódico 1.4%.', precioViejo: null, precioNuevo: 10.80, estado: 'Nuevo' },
-    { id: 18, cat: 'Viscoelásticos', nombre: 'BIO HYALUR DUO', desc: 'Hialuronato Sódico 1.0% + 2.4%.', precioViejo: 22.95, precioNuevo: 24.00, estado: 'Actualizar' },
-    { id: 19, cat: 'Viscoelásticos', nombre: 'BIO HYALUR LVD 1ML PFS', desc: '3% Hialuronato + 4% Condroitina.', precioViejo: null, precioNuevo: 24.50, estado: 'Nuevo' },
-    { id: 20, cat: 'Viscoelásticos', nombre: 'BIO HYALUR HV 1ML PFS', desc: 'Hialuronato Sódico 2.4%. Alta viscosidad.', precioViejo: 15.00, precioNuevo: 12.00, estado: 'Actualizar' },
-    { id: 21, cat: 'Viscoelásticos', nombre: 'BIO HYALUR SV 1ML PFS', desc: 'Hialuronato Sódico 3.0%. Super viscoso.', precioViejo: 16.00, precioNuevo: 12.00, estado: 'Actualizar' },
-    { id: 22, cat: 'Viscoelásticos', nombre: 'EYEVISC 2% 2ML PFS', desc: 'Hidroxipropilmetilcelulosa.', precioViejo: 9.00, precioNuevo: 7.70, estado: 'Actualizar' },
+            const filteredProducts = useMemo(() => {
+                return products.filter(p => {
+                    const matchesSearch = p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                         p.cat.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesStatus = filterStatus === 'all' || 
+                                         (filterStatus === 'missing' && p.estado === 'Nuevo') ||
+                                         (filterStatus === 'update' && p.estado === 'Actualizar');
+                    return matchesSearch && matchesStatus;
+                });
+            }, [searchTerm, filterStatus]);
 
-    // --- OTROS / VR (9 refs) ---
-    { id: 23, cat: 'Otros / VR', nombre: 'BIO BLUE 1ML PFS', desc: 'Colorante vital (Tripán Blue).', precioViejo: 72.50, precioNuevo: 9.25, estado: 'Actualizar' },
-    { id: 24, cat: 'Otros / VR', nombre: 'BIOVISION PMMA CTR', desc: 'Anillo de tensión capsular.', precioViejo: 30.00, precioNuevo: 35.00, estado: 'Actualizar' },
-    { id: 25, cat: 'Otros / VR', nombre: 'BIOBLUE 90 PLUS (ERM/ILM)', desc: 'Colorante para membranas retinianas.', precioViejo: null, precioNuevo: 39.00, estado: 'Nuevo' },
-    { id: 26, cat: 'Otros / VR', nombre: 'BIOSIL 10ML', desc: 'Aceite de silicona para VR.', precioViejo: null, precioNuevo: 45.00, estado: 'Nuevo' },
-    { id: 27, cat: 'Otros / VR', nombre: 'BIOSIL F 10ML', desc: 'Aceite de silicona variante F.', precioViejo: null, precioNuevo: 45.00, estado: 'Nuevo' },
-    { id: 28, cat: 'Otros / VR', nombre: 'BIO OCTANE', desc: 'Líquido pesado (Perfluorooctano).', precioViejo: null, precioNuevo: 50.00, estado: 'Nuevo' },
-    { id: 29, cat: 'Otros / VR', nombre: 'BIO DECALIN', desc: 'Líquido pesado (Perfluorodecalina).', precioViejo: null, precioNuevo: 50.00, estado: 'Nuevo' },
-    { id: 30, cat: 'Otros / VR', nombre: 'IRIS RETRACTOR', desc: 'Retractores de iris (5 uds).', precioViejo: 50.00, precioNuevo: 30.00, estado: 'Actualizar' },
-    { id: 31, cat: 'Otros / VR', nombre: 'BIORING', desc: 'Anillo intraestromal.', precioViejo: null, precioNuevo: 275.00, estado: 'Nuevo' },
-  ];
+            const stats = {
+                total: products.length,
+                new: products.filter(p => p.estado === 'Nuevo').length,
+                updates: products.filter(p => p.estado === 'Actualizar').length
+            };
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(p => {
-      const matchesSearch = p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           p.cat.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || 
-                           (filterStatus === 'missing' && p.estado === 'Nuevo') ||
-                           (filterStatus === 'update' && p.estado === 'Actualizar');
-      return matchesSearch && matchesStatus;
-    });
-  }, [searchTerm, filterStatus]);
+            return (
+                <div className="min-h-screen p-4 md:p-8">
+                    <div className="max-w-7xl mx-auto mb-8 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex items-center gap-5">
+                                <div className="bg-blue-600 p-4 rounded-2xl text-white shadow-xl shadow-blue-100">
+                                    <Icon name="package" size={32} />
+                                </div>
+                                <div>
+                                    <h1 className="text-3xl font-black text-slate-800 tracking-tight leading-none uppercase">Tarifa Biotech 2026</h1>
+                                    <p className="text-slate-400 mt-2 font-bold text-sm tracking-wider uppercase">Grupo Vista | 31 Referencias Activas</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="bg-slate-50 px-6 py-2 rounded-2xl border border-slate-200 flex flex-col items-center">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase">Productos</span>
+                                    <span className="text-2xl font-black text-slate-800">{stats.total}</span>
+                                </div>
+                                <button className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-black rounded-2xl shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all uppercase text-sm">
+                                    <Icon name="download" size={18} /> Exportar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-  const stats = {
-    total: products.length,
-    new: products.filter(p => p.estado === 'Nuevo').length,
-    updates: products.filter(p => p.estado === 'Actualizar').length
-  };
+                    <div className="max-w-7xl mx-auto mb-6 flex flex-col lg:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input 
+                                type="text" 
+                                placeholder="Buscar referencia o especificación..." 
+                                className="w-full pl-12 pr-6 py-4 bg-white border-0 rounded-2xl shadow-sm ring-1 ring-slate-200 focus:ring-4 focus:ring-blue-100 outline-none transition-all font-medium"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex p-1.5 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 gap-1 overflow-x-auto whitespace-nowrap">
+                            <button onClick={() => setFilterStatus('all')} className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${filterStatus === 'all' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>Todas</button>
+                            <button onClick={() => setFilterStatus('missing')} className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${filterStatus === 'missing' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>Nuevas ({stats.new})</button>
+                            <button onClick={() => setFilterStatus('update')} className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${filterStatus === 'update' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>Actualizar ({stats.updates})</button>
+                        </div>
+                    </div>
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-slate-900">
-      {/* Excel Dashboard Style Header */}
-      <div className="max-w-7xl mx-auto mb-8 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="bg-blue-600 p-4 rounded-2xl text-white shadow-xl shadow-blue-100">
-              <Package size={32} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-slate-800 tracking-tight leading-none uppercase">Tarifa Biotech 2026</h1>
-              <p className="text-slate-400 mt-2 font-bold text-sm tracking-wider uppercase">Grupo Vista | 31 Referencias Activas</p>
-            </div>
-          </div>
-          <div className="flex gap-4">
-             <div className="bg-slate-50 px-6 py-2 rounded-2xl border border-slate-200 flex flex-col items-center">
-                <span className="text-[10px] font-black text-slate-400 uppercase">Productos</span>
-                <span className="text-2xl font-black text-slate-800">{stats.total}</span>
-             </div>
-             <button className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-black rounded-2xl shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all uppercase text-sm">
-                <Download size={18} /> Exportar Excel
-             </button>
-          </div>
-        </div>
-      </div>
+                    <div className="max-w-7xl mx-auto bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50/50 border-b-2 border-slate-100">
+                                        <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-36">Imagen 1:1</th>
+                                        <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Producto y Rango</th>
+                                        <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Precio Actual</th>
+                                        <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Tarifa 2026</th>
+                                        <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {filteredProducts.map((p) => {
+                                        const diff = p.precioViejo ? p.precioNuevo - p.precioViejo : 0;
+                                        const isDown = diff < 0;
+                                        const isNew = p.precioViejo === null;
+                                        const fileInputRef = useRef(null);
 
-      {/* Control Bar */}
-      <div className="max-w-7xl mx-auto mb-6 flex flex-col lg:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input 
-            type="text" 
-            placeholder="Buscar referencia o especificación..." 
-            className="w-full pl-12 pr-6 py-4 bg-white border-0 rounded-2xl shadow-sm ring-1 ring-slate-200 focus:ring-4 focus:ring-blue-100 outline-none transition-all font-medium"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex p-1.5 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 gap-1 overflow-x-auto whitespace-nowrap">
-          <button onClick={() => setFilterStatus('all')} className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${filterStatus === 'all' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>Todas</button>
-          <button onClick={() => setFilterStatus('missing')} className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${filterStatus === 'missing' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>Nuevas ({stats.new})</button>
-          <button onClick={() => setFilterStatus('update')} className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${filterStatus === 'update' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>Actualizar ({stats.updates})</button>
-        </div>
-      </div>
+                                        return (
+                                            <tr key={p.id} className="hover:bg-blue-50/20 transition-all group">
+                                                <td className="px-8 py-6">
+                                                    <div className="relative aspect-square w-24 mx-auto bg-gray-50 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden group/img cursor-pointer hover:border-blue-500 transition-colors"
+                                                         onClick={() => fileInputRef.current?.click()}>
+                                                        {productImages[p.id] ? (
+                                                            <>
+                                                                <img src={productImages[p.id]} alt={p.nombre} className="w-full h-full object-cover" />
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); removeImage(p.id); }}
+                                                                    className="absolute top-1 right-1 bg-white/90 p-1 rounded-full text-rose-500 opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                                                >
+                                                                    <Icon name="x" size={14} />
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <div className="flex flex-col items-center text-slate-300 group-hover/img:text-blue-500 transition-colors">
+                                                                <Icon name="camera" size={24} />
+                                                                <span className="text-[8px] font-black uppercase mt-1">Cargar Foto</span>
+                                                            </div>
+                                                        )}
+                                                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(p.id, e)} />
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-6">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-black text-slate-800 text-lg leading-tight">{p.nombre}</span>
+                                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{p.cat}</span>
+                                                        <p className="text-sm text-slate-500 mt-2 font-medium italic max-w-sm leading-snug">
+                                                            {p.desc}
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-6 text-right font-mono text-slate-300 text-lg">
+                                                    {p.precioViejo ? `${p.precioViejo.toFixed(2)}€` : '---'}
+                                                </td>
+                                                <td className="px-6 py-6 text-right">
+                                                    <div className="inline-flex flex-col items-end">
+                                                        <span className="font-black text-slate-900 text-2xl font-mono tracking-tighter">
+                                                            {p.precioNuevo.toFixed(2)}€
+                                                        </span>
+                                                        {!isNew && diff !== 0 && (
+                                                            <div className={`flex items-center gap-1 text-[10px] font-black mt-1 ${isDown ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                <Icon name={isDown ? "trending-down" : "trending-up"} size={12} />
+                                                                {Math.abs((diff / p.precioViejo) * 100).toFixed(0)}%
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-6 text-center">
+                                                    <div className="flex justify-center">
+                                                        {isNew ? (
+                                                            <div className="bg-amber-50 text-amber-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-amber-200 flex items-center gap-2">
+                                                                <Icon name="plus" size={14} /> Dar de Alta
+                                                            </div>
+                                                        ) : diff === 0 ? (
+                                                            <div className="bg-slate-100 text-slate-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-200">Mismo Precio</div>
+                                                        ) : (
+                                                            <div className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-blue-200 flex items-center gap-2">
+                                                                <Icon name="alert-circle" size={14} /> Actualizar
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-      {/* Interactive Table Container */}
-      <div className="max-w-7xl mx-auto bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50 border-b-2 border-slate-100">
-                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-36">Imagen 1:1</th>
-                <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Producto y Rango</th>
-                <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Precio Actual</th>
-                <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Tarifa 2026</th>
-                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filteredProducts.map((p) => {
-                const diff = p.precioViejo ? p.precioNuevo - p.precioViejo : 0;
-                const isDown = diff < 0;
-                const isNew = p.precioViejo === null;
-                const fileInputRef = useRef(null);
+                    <div className="max-w-7xl mx-auto mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 pb-12">
+                        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+                            <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-3">
+                                <Icon name="info" className="text-blue-600" /> Notas Maestras
+                            </h3>
+                            <div className="space-y-4 text-sm text-slate-600 font-medium leading-relaxed">
+                                <p>1. Para GitHub: Renombra este archivo como <strong>index.html</strong>.</p>
+                                <p>2. El precio de <strong>Bio Blue (9,25€)</strong> es el cambio más crítico de esta tarifa.</p>
+                                <p>3. Phakic Alta Potencia SPH: Se ha ajustado el precio de 625€ a 577€.</p>
+                            </div>
+                        </div>
+                        <div className="bg-slate-800 p-8 rounded-[2rem] text-white shadow-xl flex flex-col justify-center">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="p-4 bg-blue-500/20 rounded-2xl text-blue-400">
+                                    <Icon name="check-circle-2" size={32} />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-black">Validación Final</h3>
+                                    <p className="text-slate-400 text-sm">31 referencias integradas.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
-                return (
-                  <tr key={p.id} className="hover:bg-blue-50/20 transition-all group">
-                    {/* Image Placeholder Cell */}
-                    <td className="px-8 py-6">
-                      <div className="relative aspect-square w-24 mx-auto bg-gray-50 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden group/img cursor-pointer hover:border-blue-500 transition-colors"
-                           onClick={() => fileInputRef.current?.click()}>
-                        {productImages[p.id] ? (
-                          <>
-                            <img src={productImages[p.id]} alt={p.nombre} className="w-full h-full object-cover" />
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); removeImage(p.id); }}
-                              className="absolute top-1 right-1 bg-white/90 p-1 rounded-full text-rose-500 opacity-0 group-hover/img:opacity-100 transition-opacity"
-                            >
-                              <X size={14} />
-                            </button>
-                          </>
-                        ) : (
-                          <div className="flex flex-col items-center text-slate-300 group-hover/img:text-blue-500 transition-colors">
-                            <Camera size={24} />
-                            <span className="text-[8px] font-black uppercase mt-1">Cargar Foto</span>
-                          </div>
-                        )}
-                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(p.id, e)} />
-                      </div>
-                    </td>
-
-                    {/* Product Details */}
-                    <td className="px-6 py-6">
-                      <div className="flex flex-col">
-                        <span className="font-black text-slate-800 text-lg leading-tight">{p.nombre}</span>
-                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{p.cat}</span>
-                        <p className="text-sm text-slate-500 mt-2 font-medium italic max-w-sm leading-snug">
-                          {p.desc}
-                        </p>
-                      </div>
-                    </td>
-
-                    {/* Current Price */}
-                    <td className="px-6 py-6 text-right font-mono text-slate-300 text-lg">
-                      {p.precioViejo ? `${p.precioViejo.toFixed(2)}€` : '---'}
-                    </td>
-
-                    {/* New Price 2026 */}
-                    <td className="px-6 py-6 text-right">
-                      <div className="inline-flex flex-col items-end">
-                        <span className="font-black text-slate-900 text-2xl font-mono tracking-tighter">
-                          {p.precioNuevo.toFixed(2)}€
-                        </span>
-                        {!isNew && diff !== 0 && (
-                          <div className={`flex items-center gap-1 text-[10px] font-black mt-1 ${isDown ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {isDown ? <TrendingDown size={12} /> : <TrendingUp size={12} />}
-                            {Math.abs((diff / p.precioViejo) * 100).toFixed(0)}%
-                          </div>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Action/State Label */}
-                    <td className="px-8 py-6">
-                      <div className="flex justify-center">
-                        {isNew ? (
-                          <div className="bg-amber-50 text-amber-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-amber-200 flex items-center gap-2">
-                            <Plus size={14} /> Dar de Alta
-                          </div>
-                        ) : diff === 0 ? (
-                          <div className="bg-slate-100 text-slate-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-200">Mismo Precio</div>
-                        ) : (
-                          <div className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-blue-200 flex items-center gap-2">
-                            <AlertCircle size={14} /> Actualizar
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Footer Instructions */}
-      <div className="max-w-7xl mx-auto mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
-          <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-3">
-            <Info size={24} className="text-blue-600" /> Notas para el Excel Maestro
-          </h3>
-          <div className="space-y-4 text-sm text-slate-600 font-medium leading-relaxed">
-            <p>1. Mantén la columna <strong>"Miniatura 1:1"</strong> al inicio de tu archivo para mayor impacto visual.</p>
-            <p>2. En Excel 365, vincula las fotos usando la función: <br/> 
-               <code className="bg-slate-100 p-2 rounded-lg mt-2 block text-blue-600 font-bold">=IMAGEN("URL_DE_FOTO")</code>
-            </p>
-            <p>3. El precio de <strong>Bio Blue (9,25€)</strong> es el cambio más crítico de esta tarifa. Debe corregirse urgentemente frente a los 72,50€ actuales.</p>
-          </div>
-        </div>
-        
-        <div className="bg-slate-800 p-8 rounded-[2rem] text-white shadow-xl flex flex-col justify-center">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-4 bg-blue-500/20 rounded-2xl text-blue-400">
-              <CheckCircle2 size={32} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black">Validación Final</h3>
-              <p className="text-slate-400 text-sm">31 de 31 referencias comprobadas.</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-             <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                <span className="block text-[10px] font-black text-slate-500 uppercase">Fáquicas Alta SPH</span>
-                <span className="text-lg font-bold">577€ (Nuevo)</span>
-                <span className="block text-xs text-rose-400 line-through">625€ (Antiguo)</span>
-             </div>
-             <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                <span className="block text-[10px] font-black text-slate-500 uppercase">Eyevisc 2%</span>
-                <span className="text-lg font-bold">7,70€</span>
-                <span className="block text-xs text-rose-400 line-through">9,00€</span>
-             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default App;
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
